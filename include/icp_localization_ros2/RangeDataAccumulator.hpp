@@ -37,7 +37,7 @@ public:
   bool isAccumulatedRangeDataReady() const;
   void addRangeData(const DP &rangeData, const Time &t);
   const TimedRangeData &getAccumulatedRangeData() const;
-  const TimedRangeData &popAccumulatedRangeData() const;
+  const TimedRangeData &popAccumulatedRangeData();
   const Time &getAccumulatedRangeDataTimestamp() const;
   void resetAccumulatedRangeData() const;
 

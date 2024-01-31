@@ -12,6 +12,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 
 namespace icp_loco {
 
@@ -42,6 +44,7 @@ private:
 
   std::shared_ptr<rclcpp::Node> nh_;
   std::shared_ptr<tf2_ros::TransformBroadcaster> tfBroadcaster_;
+  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> staticTfBroadcaster_;
   std::string odometryTopic_;
   std::string imuTopic_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odomSubscriber_;

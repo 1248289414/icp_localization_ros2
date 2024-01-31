@@ -89,6 +89,9 @@ private:
   bool isUseOdometry_ = false;
   bool isSetPoseFromUser_ = false;
   std::string fixedFrame_ = "map";
+
+  std::string loggerName_ = "icp_localization";
+  rclcpp::Logger logger_ = rclcpp::get_logger(loggerName_);
 };
 
 } // namespace icp_loco

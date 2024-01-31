@@ -35,7 +35,7 @@ bool RangeDataAccumulator::isAccumulatedRangeDataReady() const {
   return isRangeDataReady_;
 }
 
-const TimedRangeData &RangeDataAccumulator::popAccumulatedRangeData() const {
+const TimedRangeData &RangeDataAccumulator::popAccumulatedRangeData() {
   std::lock_guard<std::mutex> lck(accumulatedDataMutex_);
   isRangeDataReady_ = false;
   return accumulatedRangeData_;
@@ -47,29 +47,17 @@ void RangeDataAccumulator::addRangeData(const DP &rangeData, const Time &t) {
   // check if we need to erase the data
   if (currentNumRangeDataAccumulated_ == 0) {
     workingRangeData_.data_ = rangeData;
-    workingRangeData_.timestamp_ = t;
-    currentNumRangeDataAccumulated_ = 1;
-    return;
+  }else{
+    workingRangeData_.data_.concatenate(rangeData);
   }
 
-  if (isAccumulatedTargetNumRangeData()) {
-    accumulatedRangeData_ = workingRangeData_;
-    workingRangeData_.data_ = rangeData;
-    workingRangeData_.timestamp_ = t;
-    currentNumRangeDataAccumulated_ = 1;
-    isRangeDataReady_ = true;
-    return;
-  }
-
-  workingRangeData_.data_.concatenate(rangeData);
+  workingRangeData_.timestamp_ = t;
   ++currentNumRangeDataAccumulated_;
 
   if (isAccumulatedTargetNumRangeData()) {
     accumulatedRangeData_ = workingRangeData_;
-    workingRangeData_.data_ = rangeData;
-    workingRangeData_.timestamp_ = t;
-    currentNumRangeDataAccumulated_ = 1;
     isRangeDataReady_ = true;
+    currentNumRangeDataAccumulated_ = 0;
   }
 }
 
@@ -136,6 +124,9 @@ void RangeDataAccumulatorRos::publishAccumulatedRangeDataWorker() const {
       const rclcpp::Time rosTime = toRos(timestamp);
       sensor_msgs::msg::PointCloud2 msg =
           pointMatcherCloudToRosMsg<float>(cloud.data_, frameId_, rosTime);
+
+      msg.header.frame_id = "range_sensor";
+
       accumulatedRangeDataPub_->publish(msg);
     }
     r.sleep();

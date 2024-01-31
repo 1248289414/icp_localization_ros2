@@ -13,6 +13,7 @@
 // #include <eigen_conversions/eigen_msg.h>
 #include <memory>
 #include <rclcpp/qos.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <rmw/qos_profiles.h>
 
 namespace icp_loco {
@@ -61,7 +62,8 @@ void TfPublisher::initialize() {
   imuSubscriber_ = nh_->create_subscription<sensor_msgs::msg::Imu>(
       imuTopic_, rclcpp::QoS(rclcpp::KeepLast(1)),
       std::bind(&TfPublisher::imuCallback, this, std::placeholders::_1));
-      tfBroadcaster_= std::make_shared<tf2_ros::TransformBroadcaster>(nh_);
+  tfBroadcaster_= std::make_shared<tf2_ros::TransformBroadcaster>(nh_);
+  staticTfBroadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(nh_);
 }
 
 void TfPublisher::publishMapToRangeSensor(const Time &t) {
@@ -87,9 +89,10 @@ void TfPublisher::publishMapToOdom(const Time &t) {
   const auto mapToOdom = frameTracker_->getTransformMapToOdom(t);
   geometry_msgs::msg::TransformStamped transformStamped =
       toRos(mapToOdom, t, "map", "odom");
-  tfBroadcaster_->sendTransform(transformStamped);
-  // just for debug
+  staticTfBroadcaster_->sendTransform(transformStamped);
 
+
+  // just for debug
   if (isDebug) {
     const auto mapToLidar = frameTracker_->getTransformMapToRangeSensor(t);
     transformStamped = toRos(mapToLidar, t, "map", "rs_check");
@@ -119,7 +122,7 @@ void TfPublisher::odometryCallback(const nav_msgs::msg::Odometry &msg) {
   frameTracker_->setTransformOdomToOdomSource(odomToTracking);
 
   if (isProvideOdomFrame_) {
-    geometry_msgs ::msg::TransformStamped transformStamped = toRos(
+    geometry_msgs::msg::TransformStamped transformStamped = toRos(
         odomToTracking.transform_, odomToTracking.time_, "odom", "odom_source");
     tfBroadcaster_->sendTransform(transformStamped);
 

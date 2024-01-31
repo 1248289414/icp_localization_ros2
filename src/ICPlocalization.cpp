@@ -347,6 +347,11 @@ void ICPlocalization::publishPose() const {
 
 void ICPlocalization::publishRegisteredCloud() const {
   DP data_out(icp_.getReadingFiltered());
+
+  if (data_out.featureLabels.empty()){
+    return;
+  }
+
   icp_.transformations.apply(data_out, optimizedPose_);
   sensor_msgs::msg::PointCloud2 ros_msg =
       pointMatcherCloudToRosMsg<float>(data_out, fixedFrame_, this->now());
@@ -372,12 +377,6 @@ void ICPlocalization::icpWorker() {
     const unsigned int nUs =
         ch::duration_cast<ch::microseconds>(endTime - startTime).count();
     const double timeMs = nUs / 1000.0;
-    //    std::string infoStr = "Scan matching took: " +
-    //    std::to_string(timeMs)
-    //    + " ms \n"; ROS_INFO_STREAM(infoStr);
-
-    //    ROS_INFO_STREAM_THROTTLE(10.0, "Scan matching took: " << timeMs
-    //    << " ms");
 
     publishPose();
     publishRegisteredCloud();

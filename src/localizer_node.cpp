@@ -22,6 +22,7 @@
 using namespace icp_loco;
 Pointcloud::Ptr mapCloud;
 rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloudPub;
+rclcpp::TimerBase::SharedPtr icpMapPub;
 
 const double kRadToDeg = 180.0 / M_PI;
 
@@ -71,7 +72,13 @@ int main(int argc, char **argv) {
   node->initialize();
   std::cout << "succesfully initialized icp" << std::endl;
 
-  publishCloud(node->shared_from_this(),mapCloud, cloudPub, node->getFixedFrame());
+  icpMapPub = node->create_wall_timer(
+      std::chrono::milliseconds(3000),
+      [node](){
+        publishCloud(node->shared_from_this(),mapCloud, cloudPub, node->getFixedFrame());
+      });
+
+  // publishCloud(node->shared_from_this(),mapCloud, cloudPub, node->getFixedFrame());
 
   // ros::AsyncSpinner spinner(3);
   // spinner.start();
